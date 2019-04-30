@@ -33,8 +33,12 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
             # Zero out the gradients from the model.
             model.zero_grad()
 
-            probs = model.forward(batch.sentence_simple, batch.sentence_complex)[:, -1]
-            loss = criterion(probs, batch.sentence_complex)
+            probs = model.forward(
+                batch.sentence_simple,
+                batch.sentence_complex)
+            loss = criterion(
+                probs.permute(1, 2, 0),
+                batch.sentence_complex.permute(1, 0))
             total_loss += loss
 
             # Computes the gradient and takes the optimizer step
