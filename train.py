@@ -20,16 +20,17 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
     # TODO - move this into data.py
     # avg_emb = glove.vectors.mean(dim=0)
     model = Seq2seq(SIMPLE_TEXT.vocab, 200)
+    model.to(device)
 
     model.train()
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss().to(device)
 
     # TODO - pad correctly with loss function
     for epoch in range(num_epochs):
         total_loss = 0.0
 
-        for batch in train_iter:
+        for idx_batch, batch in enumerate(train_iter):
             # Zero out the gradients from the model.
             model.zero_grad()
 
@@ -44,6 +45,11 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
             # Computes the gradient and takes the optimizer step
             loss.backward()
             optimizer.step()
+
+            total_loss += loss.item()
+
+            if device.type == 'cuda':
+                torch.cuda.empty_cache()
 
         print("Done with epoch")
 
