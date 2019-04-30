@@ -12,20 +12,20 @@ class Seq2seq(nn.Module):
     This model implements the sequence to sequence model using RNNs.
     '''
 
-    def __init__(self, glove, hidden_size):
+    def __init__(self, vocab, hidden_size):
         super().__init__()
         '''
         Model initialization code.
 
-        :param glove: torchtext.vocab.GloVe pretrained embeddings with special tokens added
+        :param vocab: torchtext.vocab.Vocab pretrained embeddings with special tokens added
         :param hidden_size: size of RNN hidden layer
         '''
-        self.glove = glove
-        vocab_size = len(glove.itos)
-        emb_dim = glove.dim
+        self.vocab = vocab
+        vocab_size = len(vocab.itos)
+        emb_dim = vocab.vectors.size()[1]
 
         self.embedding = nn.Embedding(vocab_size, emb_dim)
-        self.embedding.weight.data.copy_(glove.vectors)
+        self.embedding.weight.data.copy_(vocab.vectors)
         self.encoder = nn.LSTM(input_size=emb_dim,
                                hidden_size=hidden_size,
                                num_layers=1)
@@ -76,6 +76,6 @@ class Seq2seq(nn.Module):
 
         :param vec: embedding-dimensional vector
         '''
-        cos_sim = [(w, F.cosine_similarity(vec, glove.vectors[i]))
-                   for w, i in glove.stoi.items()]
+        cos_sim = [(w, F.cosine_similarity(vec, vocab.vectors[i]))
+                   for w, i in vocab.stoi.items()]
         return sorted(cos_sim, key=lambda t: t[1])[:n]
