@@ -40,15 +40,15 @@ class Seq2seq(nn.Module):
         '''
         Runs RNN on input word sequence to find probability of output sequence using teacher forcing.
 
-        :param src: a sequence of words in the source text
-        :param trg: a sequence of words in the target text
+        :param src: a sequence of word embedding indices in the source text
+        :param trg: a sequence of word embedding indices in the target text
         :return: real-valued scores for each word in the vocabulary
         '''
-        src_idx = [self.glove.stoi(w) for w in src]
-        src_emb = self.embedding(src_idx)
+        src_emb = self.embedding(src)
+        trg_emb = self.embedding(trg)
 
         enc_out, (enc_hn, enc_cn) = self.encoder(src_emb)
-        dec_out, (dec_hn, dec_cn) = self.decoder(trg, (enc_hn, None))
+        dec_out, (dec_hn, dec_cn) = self.decoder(trg_emb, (enc_hn, enc_cn))
         out = self.fc(dec_out)
         return out
 
