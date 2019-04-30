@@ -31,8 +31,9 @@ data_fields = [('doc_id', None), ('doc_version_complex', None), ('doc_version_si
 train, val = TabularDataset.splits(path='./', train='train.csv', validation='val.csv',
                                    format='csv', fields=data_fields)
 
-SIMPLE_TEXT.build_vocab(train, val)
-COMPLEX_TEXT.build_vocab(train, val)
+SIMPLE_TEXT.build_vocab(train, val, vectors="glove.6B.100d")
+COMPLEX_TEXT.vocab = SIMPLE_TEXT.vocab
 
-train_iter = BucketIterator(train, batch_size=20, shuffle=True,
-                            sort_key=lambda x: len(x.sentence_complex))
+train_iter, val_iter = BucketIterator.splits((train, val), batch_size=(64, 64),
+                                             shuffle=True,
+                                             sort_key=lambda x: len(x.sentence_complex))
