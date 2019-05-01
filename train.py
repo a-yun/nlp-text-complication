@@ -5,13 +5,13 @@ import os
 import torch
 import torchtext.vocab as vocab
 from torch import nn, optim
+from tqdm import tqdm
 
 # TODO - put this into a function later
 from data import *
 from models import Seq2seq
 
 dirname = os.path.dirname(os.path.abspath(__file__))
-
 
 def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
     '''
@@ -30,9 +30,8 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
     for epoch in range(num_epochs):
         total_loss = 0.0
 
-        for idx_batch, batch in enumerate(train_iter):
+        for batch in tqdm(iter(train_iter), total=len(train_iter)):
             # Zero out the gradients from the model.
-            model.zero_grad()
 
             probs = model.forward(
                 batch.sentence_simple,
@@ -40,16 +39,17 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
             loss = criterion(
                 probs.permute(1, 2, 0),
                 batch.sentence_complex.permute(1, 0))
-            total_loss += loss
 
             # Computes the gradient and takes the optimizer step
+            model.zero_grad()
             loss.backward()
             optimizer.step()
 
             total_loss += loss.item()
 
-            if device.type == 'cuda':
-                torch.cuda.empty_cache()
+            # This is necessary for some reason
+            # if device.type == 'cuda':
+                # torch.cuda.empty_cache()
 
         print("Done with epoch")
 
@@ -60,7 +60,7 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--num_epochs', type=int, default=10000)
+    parser.add_argument('-i', '--num_epochs', type=int, default=16)
     parser.add_argument('-l', '--log_dir')
     args = parser.parse_args()
 

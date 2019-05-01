@@ -27,6 +27,14 @@ newsela_df = pd.read_csv(NEWSELA_FILE, sep='\t',
                                 'sentence_simple']
                          )
 
+newsela_df["simple_len"] = newsela_df['sentence_simple'].str.count(' ')
+newsela_df["complex_len"] = newsela_df['sentence_complex'].str.count(' ')
+
+MAX_SENTENCE_LEN = 400
+newsela_df = newsela_df.query('simple_len < {len:d} & complex_len < {len:d}'\
+              .format(len=MAX_SENTENCE_LEN))
+
+newsela_df.drop(columns=["simple_len", "complex_len"], inplace=True)
 newsela_df.dropna(inplace=True)
 train, val = train_test_split(newsela_df, test_size=0.1)
 
@@ -61,5 +69,5 @@ train_iter, val_iter = BucketIterator.splits(
     batch_sizes=(BATCH_SIZE, BATCH_SIZE),
     shuffle=True, sort_key=lambda x: len(x.sentence_complex))
 
-train_iter = iter(train_iter)
-val_iter = iter(val_iter)
+#train_iter = iter(train_iter)
+#val_iter = iter(val_iter)
