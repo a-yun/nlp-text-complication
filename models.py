@@ -2,10 +2,6 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-# Unlike previous classes, don't use these classes directly in train.py
-# Use the functions given in main.py
-# However, model definition still needs to be defined in these classes
-
 
 class Seq2seq(nn.Module):
     '''
@@ -17,7 +13,7 @@ class Seq2seq(nn.Module):
         '''
         Model initialization code.
 
-        :param vocab: torchtext.vocab.Vocab pretrained embeddings with special tokens added
+        :param vocab: torchtext.vocab.Vocab pretrained embeddings
         :param hidden_size: size of RNN hidden layer
         '''
         self.vocab = vocab
@@ -38,7 +34,8 @@ class Seq2seq(nn.Module):
 
     def forward(self, src, trg):
         '''
-        Runs RNN on input word sequence to find probability of output sequence using teacher forcing.
+        Runs RNN on input word sequence to find probability of output sequence
+        using teacher forcing.
 
         :param src: a sequence of word embedding indices in the source text
         :param trg: a sequence of word embedding indices in the target text
@@ -54,7 +51,8 @@ class Seq2seq(nn.Module):
 
     def translate_greedy(self, src):
         '''
-        Runs RNN on input word sequence to predict the output translation using greedy search.
+        Runs RNN on input word sequence to predict the output translation
+        using greedy search.
 
         :param src: a sequence of word vectors for the source text
         :return pred: a sequence of translated words in the target language
@@ -84,6 +82,6 @@ class Seq2seq(nn.Module):
 
         :param vec: embedding-dimensional vector
         '''
-        cos_sim = [(w, F.cosine_similarity(vec, vocab.vectors[i]))
-                   for w, i in vocab.stoi.items()]
-        return sorted(cos_sim, key=lambda t: t[1])[:n]
+        cos_sim = [(w, F.cosine_similarity(vec, self.vocab.vectors[i]))
+                   for w, i in self.vocab.stoi.items()]
+        return sorted(cos_sim, key=lambda t: t[1])[-1]
