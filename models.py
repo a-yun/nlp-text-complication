@@ -58,22 +58,28 @@ class Seq2seq(nn.Module):
         :return pred: a sequence of translated words in the target language
         :return out: real-valued scores for each word in the vocabulary
         '''
-        enc_out, (enc_hn, enc_cn) = self.encoder(src)
+        src_emb = self.embedding(src)
+        enc_out, (enc_hn, enc_cn) = self.encoder(src_emb)
 
-        pred = ['<sos>']
-        out = [self.embedding(pred[-1])]
+        preds = ['<sos>']
+        probs = [torch.Tensor(1, 1, len(self.vocab.itos))]
+        probs[0][0, 0, self.vocab.stoi[preds[-1]]] = 1  # set <sos> prob to 1
         hn, cn = enc_hn, enc_cn
 
         # Predict one word at a time until EOS, reusing previous hidden states
-        while pred[-1] != '<eos>':
-            trg_emb = self.embedding(pred[-1])
+        while preds[-1] != '<eos>' and len(preds) < 400:
+            pred_idx = self.vocab.stoi[preds[-1]]
+            trg_emb = self.embedding(torch.LongTensor([pred_idx])).unsqueeze(0)
             dec_out, (hn, cn) = self.decoder(trg_emb, (hn, cn))
-            pred.append(self.nearest_neighbor(dec_out))
-            out.append(dec_out)
+            out = self.fc(dec_out)
+            # print(out)
+            # print(out.argmax(dim=-1))
 
-        out = torch.stack(out, dim=0)
-        out = self.fc(dec_out)
-        return pred, out
+            preds.append(self.vocab.itos[out.argmax(dim=-1)])
+            probs.append(out)
+
+        probs = torch.stack(probs, dim=0)
+        return preds, probs
 
     def nearest_neighbor(self, vec):
         '''
