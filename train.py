@@ -50,7 +50,7 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
             # if device.type == 'cuda':
                 # torch.cuda.empty_cache()
 
-        print("Done with epoch")
+        print("Done with epoch. Total loss:", total_loss)
 
     # Save the trained model
     torch.save(model.state_dict(), os.path.join(dirname, 'model.pth'))
