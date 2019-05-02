@@ -42,8 +42,8 @@ def tok(x):
     return wordpunct_tokenize(x)
 
 
-SIMPLE_TEXT = Field(tokenize=tok)
-COMPLEX_TEXT = Field(tokenize=tok)
+SIMPLE_TEXT = Field(tokenize=tok, init_token='<sos>', eos_token='<eos>')
+COMPLEX_TEXT = Field(tokenize=tok, init_token='<sos>', eos_token='<eos>')
 
 data_fields = [
     ('doc_id', None),
@@ -57,15 +57,8 @@ train, val, test = dataset.split(
     split_ratio=[0.8, 0.1, 0.1],
     random_state=random.seed(0))
 
-SIMPLE_TEXT.build_vocab(
-    train,
-    val,
-    vectors="glove.6B.100d",
-    unk_init=None, # TODO - average this later
-    specials=[
-        '<pad>',
-        '<eos>',
-        '<sos>'])
+# TODO - average unk_init
+SIMPLE_TEXT.build_vocab(train, val, vectors="glove.6B.100d", unk_init=None)
 COMPLEX_TEXT.vocab = SIMPLE_TEXT.vocab
 
 BATCH_SIZE = 32
