@@ -57,7 +57,15 @@ train, val, test = dataset.split(
     split_ratio=[0.8, 0.1, 0.1],
     random_state=random.seed(0))
 
-SIMPLE_TEXT.build_vocab(train, val, vectors="glove.6B.100d")
+SIMPLE_TEXT.build_vocab(
+    train,
+    val,
+    vectors="glove.6B.100d",
+    unk_init=None, # TODO - average this later
+    specials=[
+        '<pad>',
+        '<eos>',
+        '<sos>'])
 COMPLEX_TEXT.vocab = SIMPLE_TEXT.vocab
 
 BATCH_SIZE = 32

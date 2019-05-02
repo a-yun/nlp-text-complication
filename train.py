@@ -1,9 +1,7 @@
 import argparse
-import numpy as np
 import os
 
 import torch
-import torchtext.vocab as vocab
 from torch import nn, optim
 from tqdm import tqdm
 
@@ -12,6 +10,7 @@ from data import *
 from models import Seq2seq
 
 dirname = os.path.dirname(os.path.abspath(__file__))
+
 
 def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
     '''
@@ -31,8 +30,6 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
         total_loss = 0.0
 
         for batch in tqdm(iter(train_iter), total=len(train_iter)):
-            # Zero out the gradients from the model.
-
             probs = model.forward(
                 batch.sentence_simple,
                 batch.sentence_complex)
@@ -40,7 +37,7 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
                 probs.permute(1, 2, 0),
                 batch.sentence_complex.permute(1, 0))
 
-            # Computes the gradient and takes the optimizer step
+            # Zeroes and omputes the gradient and takes the optimizer step
             model.zero_grad()
             loss.backward()
             optimizer.step()

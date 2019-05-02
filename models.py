@@ -57,17 +57,25 @@ class Seq2seq(nn.Module):
         Runs RNN on input word sequence to predict the output translation using greedy search.
 
         :param src: a sequence of word vectors for the source text
-        :return: real-valued scores for each word in the vocabulary
+        :return pred: a sequence of translated words in the target language
+        :return out: real-valued scores for each word in the vocabulary
         '''
         enc_out, (enc_hn, enc_cn) = self.encoder(src)
 
-        pred = ['<SOS>']
+        pred = ['<sos>']
+        out = [self.embedding(pred[-1])]
         hn, cn = enc_hn, enc_cn
-        while pred[-1] != '<EOS>':
-            dec_out, (hn, cn) = self.decoder(trg, (enc_hn, None))
+
+        # Predict one word at a time until EOS, reusing previous hidden states
+        while pred[-1] != '<eos>':
+            trg_emb = self.embedding(pred[-1])
+            dec_out, (hn, cn) = self.decoder(trg_emb, (hn, cn))
             pred.append(self.nearest_neighbor(dec_out))
+            out.append(dec_out)
+
+        out = torch.stack(out, dim=0)
         out = self.fc(dec_out)
-        return out
+        return pred, out
 
     def nearest_neighbor(self, vec):
         '''
