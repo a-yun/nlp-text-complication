@@ -5,8 +5,7 @@ import torch
 from torchtext.data import Field, BucketIterator, TabularDataset
 
 # From: https://stackoverflow.com/a/53374933
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# device = torch.device('cpu')
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print('Using device:', device)
 print()
 
@@ -58,11 +57,16 @@ train, val, test = dataset.split(
     random_state=random.seed(0))
 
 # TODO - average unk_init
-SIMPLE_TEXT.build_vocab(train, val, vectors="glove.6B.100d", unk_init=None)
+SIMPLE_TEXT.build_vocab(
+    train,
+    val,
+    test,
+    vectors="glove.6B.100d",
+    unk_init=None)
 COMPLEX_TEXT.vocab = SIMPLE_TEXT.vocab
 
 BATCH_SIZE = 32
-train_iter, val_iter = BucketIterator.splits(
-    (train, val), device=device,
-    batch_sizes=(BATCH_SIZE, BATCH_SIZE),
+train_iter, val_iter, test_iter = BucketIterator.splits(
+    (train, val, test), device=device,
+    batch_sizes=(BATCH_SIZE, BATCH_SIZE, BATCH_SIZE),
     shuffle=True, sort_key=lambda x: len(x.sentence_complex))
