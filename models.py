@@ -2,6 +2,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
 
 class Seq2seq(nn.Module):
     '''
@@ -62,14 +64,16 @@ class Seq2seq(nn.Module):
         enc_out, (enc_hn, enc_cn) = self.encoder(src_emb)
 
         preds = ['<sos>']
-        probs = [torch.Tensor(1, 1, len(self.vocab.itos))]
+        probs = [torch.Tensor(1, 1, len(self.vocab.itos)).to(device)]
         probs[0][0, 0, self.vocab.stoi[preds[-1]]] = 1  # set <sos> prob to 1
         hn, cn = enc_hn, enc_cn
 
         # Predict one word at a time until EOS, reusing previous hidden states
         while preds[-1] != '<eos>' and len(preds) < 400:
             pred_idx = self.vocab.stoi[preds[-1]]
-            trg_emb = self.embedding(torch.LongTensor([pred_idx])).unsqueeze(0)
+            trg_emb = self.embedding(
+                torch.LongTensor(
+                    [pred_idx]).to(device)).unsqueeze(0)
             dec_out, (hn, cn) = self.decoder(trg_emb, (hn, cn))
             out = self.fc(dec_out)
             # print(out)
