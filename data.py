@@ -70,6 +70,6 @@ COMPLEX_TEXT.vocab = SIMPLE_TEXT.vocab
 BATCH_SIZE = 32
 train_iter, val_iter, test_iter = BucketIterator.splits(
     (train, val, test), device=device,
-    batch_sizes=(BATCH_SIZE, BATCH_SIZE, BATCH_SIZE),
+    batch_sizes=(BATCH_SIZE, 1, 1),
     shuffle=True, sort_within_batch=True,
     sort_key=lambda x: len(x.sentence_simple))
