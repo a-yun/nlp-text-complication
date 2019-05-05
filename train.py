@@ -36,8 +36,8 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
                 batch.sentence_complex[0],
                 batch.sentence_simple[1])
             loss = criterion(
-                probs.permute(1, 2, 0),
-                batch.sentence_complex[0].permute(1, 0))
+                probs.permute(1, 2, 0)[:, :, :-1],
+                batch.sentence_complex[0].permute(1, 0)[:, 1:])
 
             # Zeroes and omputes the gradient and takes the optimizer step
             model.zero_grad()
