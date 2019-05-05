@@ -35,10 +35,13 @@ def eval(batch_size=1):
     with torch.no_grad():
         for batch in tqdm(iter(test_iter), total=len(test_iter)):
             for simple, complex in zip(
-                    batch.sentence_simple[0], batch.sentence_complex[0]):
+                    batch.sentence_simple[0].permute(1, 0),
+                    batch.sentence_complex[0].permute(1, 0)):
                 pred, _ = model.translate_greedy(simple.unsqueeze(1))
                 preds.append(pred)
-                refs.append([complex])
+                complex_text = [SIMPLE_TEXT.vocab.itos[tok] for tok in complex]
+                # TODO - get rid of pad
+                refs.append([complex_text])
 
     print(corpus_bleu(refs, preds))
 
