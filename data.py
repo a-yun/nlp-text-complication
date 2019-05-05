@@ -41,8 +41,10 @@ def tok(x):
     return wordpunct_tokenize(x)
 
 
-SIMPLE_TEXT = Field(tokenize=tok, init_token='<sos>', eos_token='<eos>')
-COMPLEX_TEXT = Field(tokenize=tok, init_token='<sos>', eos_token='<eos>')
+SIMPLE_TEXT = Field(tokenize=tok, include_lengths=True,
+                    init_token='<sos>', eos_token='<eos>')
+COMPLEX_TEXT = Field(tokenize=tok, include_lengths=True,
+                     init_token='<sos>', eos_token='<eos>')
 
 data_fields = [
     ('doc_id', None),
@@ -69,4 +71,5 @@ BATCH_SIZE = 32
 train_iter, val_iter, test_iter = BucketIterator.splits(
     (train, val, test), device=device,
     batch_sizes=(BATCH_SIZE, BATCH_SIZE, BATCH_SIZE),
-    shuffle=True, sort_key=lambda x: len(x.sentence_complex))
+    shuffle=True, sort_within_batch=True,
+    sort_key=lambda x: len(x.sentence_simple))

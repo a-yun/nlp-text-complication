@@ -34,20 +34,30 @@ class Seq2seq(nn.Module):
         self.activation = nn.Sigmoid()
         self.fc = nn.Linear(hidden_size, vocab_size)
 
-    def forward(self, src, trg):
+    def forward(self, src, trg, src_lens):
         '''
         Runs RNN on input word sequence to find probability of output sequence
         using teacher forcing.
 
         :param src: a sequence of word embedding indices in the source text
         :param trg: a sequence of word embedding indices in the target text
+        :param src_lens: lengths of each unpadded input seq, used for packing
         :return: real-valued scores for each word in the vocabulary
         '''
         src_emb = self.embedding(src)
         trg_emb = self.embedding(trg)
 
+        # Pack padded tensors
+        src_emb = torch.nn.utils.rnn.pack_padded_sequence(src_emb, src_lens)
+
+        # RNN step
         enc_out, (enc_hn, enc_cn) = self.encoder(src_emb)
         dec_out, (dec_hn, dec_cn) = self.decoder(trg_emb, (enc_hn, enc_cn))
+
+        # Undo packing (not necessary?)
+        # dec_out = torch.nn.utils.rnn.pad_packed_sequence(dec_out)
+
+        # Output logits for each word
         out = self.fc(dec_out)
         return out
 

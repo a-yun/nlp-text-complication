@@ -23,7 +23,8 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
 
     model.train()
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    criterion = nn.CrossEntropyLoss().to(device)
+    pad_idx = SIMPLE_TEXT.vocab.stoi[SIMPLE_TEXT.pad_token]
+    criterion = nn.CrossEntropyLoss(ignore_index=pad_idx).to(device)
 
     # TODO - pad correctly with loss function
     for epoch in range(num_epochs):
@@ -31,11 +32,12 @@ def train(num_epochs, batch_size=1, lr=0.001, log_dir=None):
 
         for batch in tqdm(iter(train_iter), total=len(train_iter)):
             probs = model.forward(
-                batch.sentence_simple,
-                batch.sentence_complex)
+                batch.sentence_simple[0],
+                batch.sentence_complex[0],
+                batch.sentence_simple[1])
             loss = criterion(
                 probs.permute(1, 2, 0),
-                batch.sentence_complex.permute(1, 0))
+                batch.sentence_complex[0].permute(1, 0))
 
             # Zeroes and omputes the gradient and takes the optimizer step
             model.zero_grad()
