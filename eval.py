@@ -19,14 +19,12 @@ def eval(batch_size=1):
     '''
     model = Seq2seq(SIMPLE_TEXT.vocab, 200)
     model.to(device)
-    '''
     model.load_state_dict(
         torch.load(
             os.path.join(
                 dirname,
                 'model.pth'),
             map_location=device))
-    '''
     model.eval()
 
     preds = list()
