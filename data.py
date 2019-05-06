@@ -28,12 +28,20 @@ newsela_df = pd.read_csv(NEWSELA_FILE, sep='\t',
 newsela_df["simple_len"] = newsela_df['sentence_simple'].str.count(' ')
 newsela_df["complex_len"] = newsela_df['sentence_complex'].str.count(' ')
 
+# Only keep sentences less than 400 words in order to fit in CUDA memory
 MAX_SENTENCE_LEN = 400
 newsela_df = newsela_df.query('simple_len < {len:d} & complex_len < {len:d}'
                               .format(len=MAX_SENTENCE_LEN))
 
 newsela_df.drop(columns=["simple_len", "complex_len"], inplace=True)
 newsela_df.dropna(inplace=True)
+
+# Filter out duplicate simple sentences to preserve train/val/test split
+newsela_df.drop_duplicates(
+    subset='sentence_complex',
+    keep='first',
+    inplace=True)
+
 newsela_df.to_csv("data.csv", index=False)
 
 
