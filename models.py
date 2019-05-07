@@ -26,13 +26,15 @@ class Seq2seq(nn.Module):
         self.embedding.weight.data.copy_(vocab.vectors)
         self.encoder = nn.LSTM(input_size=emb_dim,
                                hidden_size=hidden_size,
-                               num_layers=1)
+                               num_layers=1,
+                               bidirectional=True)
         self.decoder = nn.LSTM(input_size=emb_dim,
-                               hidden_size=hidden_size,
-                               num_layers=1)
+                               hidden_size=hidden_size * 2,
+                               num_layers=1,
+                               bidirectional=False)
 
         self.activation = nn.Sigmoid()
-        self.fc = nn.Linear(hidden_size, vocab_size)
+        self.fc = nn.Linear(hidden_size * 2, vocab_size)
 
     def forward(self, src, trg, src_lens):
         '''
@@ -50,8 +52,21 @@ class Seq2seq(nn.Module):
         # Pack padded tensors
         src_emb = torch.nn.utils.rnn.pack_padded_sequence(src_emb, src_lens)
 
-        # RNN step
+        # RNN encoder
         enc_out, (enc_hn, enc_cn) = self.encoder(src_emb)
+
+        # Resize bidirectional encoder state to fit unidirectional decoder
+        # [dirs, batch, hid] -> [1, batch, hid * dirs]
+        enc_hn = enc_hn.permute(1, 0, 2)  # switch to [batch, dirs, hid]
+        enc_hn = enc_hn.contiguous()
+        enc_hn = enc_hn.view(enc_hn.size()[0], 1, -1)  # [batch, 1, hid * dirs]
+        enc_hn = enc_hn.permute(1, 0, 2)  # [1, batch, hid * dirs]
+        enc_cn = enc_cn.permute(1, 0, 2)  # switch to [batch, dirs, hid]
+        enc_cn = enc_cn.contiguous()
+        enc_cn = enc_cn.view(enc_cn.size()[0], 1, -1)  # [batch, 1, hid * dirs]
+        enc_cn = enc_cn.permute(1, 0, 2)  # [1, batch, hid * dirs]
+
+        # RNN decoder
         dec_out, (dec_hn, dec_cn) = self.decoder(trg_emb, (enc_hn, enc_cn))
 
         # Undo packing (not necessary?)
@@ -84,6 +99,7 @@ class Seq2seq(nn.Module):
             trg_emb = self.embedding(
                 torch.LongTensor(
                     [pred_idx]).to(device)).unsqueeze(0)
+            # TODO - fix this for biLSTM
             dec_out, (hn, cn) = self.decoder(trg_emb, (hn, cn))
             out = self.fc(dec_out)
             # print(out)
