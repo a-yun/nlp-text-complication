@@ -88,9 +88,22 @@ class Seq2seq(nn.Module):
         src_emb = self.embedding(src)
         enc_out, (enc_hn, enc_cn) = self.encoder(src_emb)
 
+        # Initialize prediction with SOS token
         preds = ['<sos>']
         probs = [torch.Tensor(1, 1, len(self.vocab.itos)).to(device)]
         probs[0][0, 0, self.vocab.stoi[preds[-1]]] = 1  # set <sos> prob to 1
+
+        # Resize bidirectional encoder state to fit unidirectional decoder
+        # [dirs, batch, hid] -> [1, batch, hid * dirs]
+        enc_hn = enc_hn.permute(1, 0, 2)  # switch to [batch, dirs, hid]
+        enc_hn = enc_hn.contiguous()
+        enc_hn = enc_hn.view(enc_hn.size()[0], 1, -1)  # [batch, 1, hid * dirs]
+        enc_hn = enc_hn.permute(1, 0, 2)  # [1, batch, hid * dirs]
+        enc_cn = enc_cn.permute(1, 0, 2)  # switch to [batch, dirs, hid]
+        enc_cn = enc_cn.contiguous()
+        enc_cn = enc_cn.view(enc_cn.size()[0], 1, -1)  # [batch, 1, hid * dirs]
+        enc_cn = enc_cn.permute(1, 0, 2)  # [1, batch, hid * dirs]
+
         hn, cn = enc_hn, enc_cn
 
         # Predict one word at a time until EOS, reusing previous hidden states
@@ -99,11 +112,8 @@ class Seq2seq(nn.Module):
             trg_emb = self.embedding(
                 torch.LongTensor(
                     [pred_idx]).to(device)).unsqueeze(0)
-            # TODO - fix this for biLSTM
             dec_out, (hn, cn) = self.decoder(trg_emb, (hn, cn))
             out = self.fc(dec_out)
-            # print(out)
-            # print(out.argmax(dim=-1))
 
             preds.append(self.vocab.itos[out.argmax(dim=-1)])
             probs.append(out)
