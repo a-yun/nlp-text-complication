@@ -28,6 +28,7 @@ def eval(batch_size=1):
     model.eval()
 
     preds = list()
+    baselines = list()
     refs = list()
 
     with torch.no_grad():
@@ -37,11 +38,14 @@ def eval(batch_size=1):
                     batch.sentence_complex[0].permute(1, 0)):
                 pred, _ = model.translate_greedy(simple.unsqueeze(1))
                 preds.append(pred)
+                simple_text = [SIMPLE_TEXT.vocab.itos[tok] for tok in simple]
                 complex_text = [SIMPLE_TEXT.vocab.itos[tok] for tok in complex]
                 # TODO - get rid of pad
                 refs.append([complex_text])
+                baselines.append(simple_text)
 
-    print(corpus_bleu(refs, preds))
+    print("Model:", corpus_bleu(refs, preds))
+    print("Baseline:", corpus_bleu(refs, baselines))
 
 
 if __name__ == '__main__':
