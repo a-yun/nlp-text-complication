@@ -46,7 +46,7 @@ df_train.to_csv(
     index=False,
     header=False)
 df_train.to_csv(
-    "../OpenNMT-py/data/trg-train.txt",
+    "../OpenNMT-py/data/tgt-train.txt",
     columns=['sentence_complex'],
     index=False,
     header=False)
@@ -56,7 +56,7 @@ df_val.to_csv(
     index=False,
     header=False)
 df_val.to_csv(
-    "../OpenNMT-py/data/trg-val.txt",
+    "../OpenNMT-py/data/tgt-val.txt",
     columns=['sentence_complex'],
     index=False,
     header=False)
