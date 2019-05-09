@@ -1,3 +1,4 @@
+import csv
 from nltk.tokenize import wordpunct_tokenize
 import pandas as pd
 import pathlib
@@ -11,7 +12,7 @@ def tok(x):
 NEWSELA_FILE = './newsela_article_corpus_2016-01-29/' \
     'newsela_data_share-20150302/newsela_articles_20150302.aligned.sents.txt'
 
-newsela_df = pd.read_csv(NEWSELA_FILE, sep='\t',
+newsela_df = pd.read_csv(NEWSELA_FILE, sep='\t', quoting=csv.QUOTE_NONE,
                          names=['doc_id', 'doc_version_complex',
                                 'doc_version_simple', 'sentence_complex',
                                 'sentence_simple']
