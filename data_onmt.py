@@ -37,7 +37,7 @@ newsela_df.drop_duplicates(
 pd.set_option('display.max_colwidth', -1)
 
 # Write to data files required by OpenNMT
-pathlib.Path('/my/directory').mkdir(parents=True, exist_ok=True)
+pathlib.Path('../OpenNMT-py/data').mkdir(parents=True, exist_ok=True)
 
 df_train, df_val = train_test_split(newsela_df, test_size=0.1, random_state=0)
 df_train.to_csv(
