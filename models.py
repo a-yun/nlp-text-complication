@@ -26,11 +26,11 @@ class Seq2seq(nn.Module):
         self.embedding.weight.data.copy_(vocab.vectors)
         self.encoder = nn.LSTM(input_size=emb_dim,
                                hidden_size=hidden_size,
-                               num_layers=1,
+                               num_layers=2,
                                bidirectional=True)
         self.decoder = nn.LSTM(input_size=emb_dim,
                                hidden_size=hidden_size * 2,
-                               num_layers=1,
+                               num_layers=2,
                                bidirectional=False)
 
         self.activation = nn.Sigmoid()
@@ -59,12 +59,14 @@ class Seq2seq(nn.Module):
         # [dirs, batch, hid] -> [1, batch, hid * dirs]
         enc_hn = enc_hn.permute(1, 0, 2)  # switch to [batch, dirs, hid]
         enc_hn = enc_hn.contiguous()
-        enc_hn = enc_hn.view(enc_hn.size()[0], 1, -1)  # [batch, 1, hid * dirs]
+        enc_hn = enc_hn.view(enc_hn.size()[0], self.encoder.num_layers, -1)  # [batch, 1, hid * dirs]
         enc_hn = enc_hn.permute(1, 0, 2)  # [1, batch, hid * dirs]
+        enc_hn = enc_hn.contiguous()
         enc_cn = enc_cn.permute(1, 0, 2)  # switch to [batch, dirs, hid]
         enc_cn = enc_cn.contiguous()
-        enc_cn = enc_cn.view(enc_cn.size()[0], 1, -1)  # [batch, 1, hid * dirs]
+        enc_cn = enc_cn.view(enc_cn.size()[0], self.encoder.num_layers, -1)  # [batch, 1, hid * dirs]
         enc_cn = enc_cn.permute(1, 0, 2)  # [1, batch, hid * dirs]
+        enc_cn = enc_cn.contiguous()
 
         # RNN decoder
         dec_out, (dec_hn, dec_cn) = self.decoder(trg_emb, (enc_hn, enc_cn))
@@ -97,12 +99,14 @@ class Seq2seq(nn.Module):
         # [dirs, batch, hid] -> [1, batch, hid * dirs]
         enc_hn = enc_hn.permute(1, 0, 2)  # switch to [batch, dirs, hid]
         enc_hn = enc_hn.contiguous()
-        enc_hn = enc_hn.view(enc_hn.size()[0], 1, -1)  # [batch, 1, hid * dirs]
+        enc_hn = enc_hn.view(enc_hn.size()[0], self.encoder.num_layers, -1)  # [batch, 1, hid * dirs]
         enc_hn = enc_hn.permute(1, 0, 2)  # [1, batch, hid * dirs]
+        enc_hn = enc_hn.contiguous()
         enc_cn = enc_cn.permute(1, 0, 2)  # switch to [batch, dirs, hid]
         enc_cn = enc_cn.contiguous()
-        enc_cn = enc_cn.view(enc_cn.size()[0], 1, -1)  # [batch, 1, hid * dirs]
+        enc_cn = enc_cn.view(enc_cn.size()[0], self.encoder.num_layers, -1)  # [batch, 1, hid * dirs]
         enc_cn = enc_cn.permute(1, 0, 2)  # [1, batch, hid * dirs]
+        enc_cn = enc_cn.contiguous()
 
         hn, cn = enc_hn, enc_cn
 
