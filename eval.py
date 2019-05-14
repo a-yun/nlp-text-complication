@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from nltk.translate.bleu_score import corpus_bleu
+from nltk.translate.bleu_score import sentence_bleu
 import torch
 from torch import nn, optim
 from tqdm import tqdm
@@ -27,9 +27,9 @@ def eval(batch_size=1):
             map_location=device))
     model.eval()
 
-    preds = list()
-    baselines = list()
-    refs = list()
+    pred_bleu = list()
+    delta_bleu = list()
+    baseline_bleu = list()
 
     with torch.no_grad():
         for batch in tqdm(iter(test_iter), total=len(test_iter)):
@@ -37,15 +37,15 @@ def eval(batch_size=1):
                     batch.sentence_simple[0].permute(1, 0),
                     batch.sentence_complex[0].permute(1, 0)):
                 pred, _ = model.translate_greedy(simple.unsqueeze(1))
-                preds.append(pred)
                 simple_text = [SIMPLE_TEXT.vocab.itos[tok] for tok in simple]
                 complex_text = [SIMPLE_TEXT.vocab.itos[tok] for tok in complex]
-                # TODO - get rid of pad
-                refs.append([complex_text])
-                baselines.append(simple_text)
+                pred_bleu.append(sentence_bleu([complex_text], pred))
+                delta_bleu.append(sentence_bleu([simple_text], pred))
+                baseline_bleu.append(sentence_bleu([complex_text], simple_text))
 
-    print("Model:", corpus_bleu(refs, preds))
-    print("Baseline:", corpus_bleu(refs, baselines))
+    print('Model-tgt BLEU score: ', sum(pred_bleu)/len(pred_bleu))
+    print('Model-src BLEU score: ', sum(delta_bleu)/len(delta_bleu))
+    print('Baseline BLEU score: ', sum(baseline_bleu)/len(baseline_bleu))
 
 
 if __name__ == '__main__':
